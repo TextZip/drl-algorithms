@@ -12,8 +12,7 @@ def policy(state,epsilon=0.2):
         action_value = action_values[state]
         return np.random.choice(np.flatnonzero(action_value == action_value.max()))
 
-def on_policy_monte_carlo(policy,action_values,episodes,gamma=0.99,epsilon=0.2):
-    sa_returns = {}
+def constant_alpha_monte_carlo(policy,action_values,episodes,gamma=0.99,epsilon=0.2,alpha=0.2):
 
     for episode in range(1, episodes+1):
         state,info = env.reset()
@@ -32,14 +31,13 @@ def on_policy_monte_carlo(policy,action_values,episodes,gamma=0.99,epsilon=0.2):
         for state_t,action_t,reward_t in reversed(transitions):
             G = reward_t + gamma*G
 
-            if not (state_t,action_t) in sa_returns:
-                sa_returns[(state_t,action_t)] = []
-            sa_returns[(state_t,action_t)].append(G)
-            action_values[state_t,action_t] = np.mean(sa_returns[(state_t,action_t)])
+            old_value = action_values[state_t,action_t]
+            action_values[state_t,action_t] += alpha*(G-old_value)
+
     env.close()
 
 
-on_policy_monte_carlo(policy=policy,action_values=action_values,episodes=10000)
+constant_alpha_monte_carlo(policy=policy,action_values=action_values,episodes=20000)
 
 env = gym.make('FrozenLake-v1', desc=None, map_name="8x8",
                is_slippery=False, render_mode="human")
